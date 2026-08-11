@@ -1,0 +1,642 @@
+<title>초보자 구독형 스크리닝 앱 — 와이어프레임 v1</title>
+<style>
+  :root {
+    --paper: #f6f5f1;
+    --surface: #ffffff;
+    --surface-dim: #efeee8;
+    --ink: #1d1d1b;
+    --ink-soft: #6f6e68;
+    --ink-faint: #a4a29a;
+    --line: #d8d6cd;
+    --line-strong: #a6a49c;
+    --accent: #3355e6;
+    --accent-soft: #e8ecfc;
+    --warn: #b45309;
+    --warn-soft: #fdf1e0;
+    --lock: #9a988f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #17181a;
+      --surface: #1f2023;
+      --surface-dim: #26272b;
+      --ink: #f1efe9;
+      --ink-soft: #a6a49c;
+      --ink-faint: #6f7176;
+      --line: #35373b;
+      --line-strong: #4b4d52;
+      --accent: #8fa2ff;
+      --accent-soft: #232a4d;
+      --warn: #f2a65a;
+      --warn-soft: #3a2a17;
+      --lock: #6b6d72;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #17181a;
+    --surface: #1f2023;
+    --surface-dim: #26272b;
+    --ink: #f1efe9;
+    --ink-soft: #a6a49c;
+    --ink-faint: #6f7176;
+    --line: #35373b;
+    --line-strong: #4b4d52;
+    --accent: #8fa2ff;
+    --accent-soft: #232a4d;
+    --warn: #f2a65a;
+    --warn-soft: #3a2a17;
+    --lock: #6b6d72;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Segoe UI", "Malgun Gothic", sans-serif;
+    line-height: 1.5;
+  }
+  .mono {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", "Nanum Gothic Coding", monospace;
+  }
+
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+
+  /* ---------- Header ---------- */
+  .eyebrow {
+    display: inline-block;
+    font-family: ui-monospace, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    margin-bottom: 0.9rem;
+  }
+  h1 {
+    font-size: clamp(1.6rem, 2.6vw, 2.15rem);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 0 0 0.6rem;
+  }
+  .intro {
+    max-width: 62ch;
+    color: var(--ink-soft);
+    font-size: 0.98rem;
+  }
+  .intro b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- Legend ---------- */
+  .legend {
+    margin-top: 1.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.4rem;
+    padding: 0.9rem 1.1rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+  }
+  .legend-swatch {
+    width: 1.1rem; height: 1.1rem; border-radius: 4px; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.62rem; font-weight: 700;
+  }
+  .sw-img {
+    border: 1.4px solid var(--line-strong);
+    background:
+      linear-gradient(to top right, transparent 46%, var(--line-strong) 47%, var(--line-strong) 53%, transparent 54%),
+      linear-gradient(to top left, transparent 46%, var(--line-strong) 47%, var(--line-strong) 53%, transparent 54%);
+  }
+  .sw-ref { background: var(--accent-soft); color: var(--accent); }
+  .sw-flag { background: var(--warn-soft); color: var(--warn); }
+  .sw-lock { background: var(--surface-dim); color: var(--lock); border: 1px solid var(--line); }
+
+  /* ---------- Stage groups ---------- */
+  .stage {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    margin: 3.2rem 0 1.1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .stage:first-of-type { margin-top: 2.6rem; }
+  .stage-idx {
+    font-family: ui-monospace, monospace;
+    font-size: 0.85rem;
+    color: var(--accent);
+  }
+  .stage h2 { font-size: 1.05rem; font-weight: 700; margin: 0; }
+  .stage span.note { font-size: 0.82rem; color: var(--ink-faint); margin-left: 0.3rem; }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2.6rem 1.8rem;
+  }
+
+  /* ---------- Scene (one wireframe screen) ---------- */
+  .scene { display: flex; flex-direction: column; }
+  .scene-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    margin-bottom: 0.9rem;
+  }
+  .scene-num {
+    flex: none;
+    width: 1.9rem; height: 1.9rem;
+    border-radius: 50%;
+    border: 1px solid var(--line-strong);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700;
+    color: var(--ink-soft);
+  }
+  .scene-title { flex: 1; min-width: 0; }
+  .scene-title h3 { margin: 0; font-size: 1rem; font-weight: 700; }
+  .scene-title p { margin: 0.15rem 0 0; font-size: 0.8rem; color: var(--ink-faint); }
+  .ref {
+    flex: none;
+    font-family: ui-monospace, monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    white-space: nowrap;
+    margin-top: 0.15rem;
+  }
+
+  /* ---------- Device frame ---------- */
+  .frame {
+    border: 2px solid var(--line-strong);
+    border-radius: 22px;
+    background: var(--surface);
+    padding: 0.5rem 0.5rem 0.9rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .notch {
+    width: 48px; height: 5px;
+    background: var(--line);
+    border-radius: 3px;
+    margin: 0.35rem auto 0.55rem;
+  }
+  .screen {
+    background: var(--surface);
+    border-radius: 14px;
+    padding: 0.9rem 0.85rem 1.05rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    min-height: 430px;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    padding-bottom: 0.55rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .topbar .tt { font-weight: 700; color: var(--ink); font-size: 0.86rem; }
+  .icn {
+    width: 1.15rem; height: 1.15rem;
+    border: 1.4px solid var(--line-strong);
+    border-radius: 4px;
+    flex: none;
+  }
+  .icn.round { border-radius: 50%; }
+
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0.75rem 0.8rem;
+    background: var(--surface);
+  }
+  .card + .card { margin-top: 0; }
+
+  .flagged { position: relative; border-color: var(--warn); }
+  .flag-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: ui-monospace, monospace;
+    font-size: 0.68rem;
+    color: var(--warn);
+    background: var(--warn-soft);
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    margin-bottom: 0.45rem;
+  }
+
+  .line { height: 8px; border-radius: 3px; background: var(--surface-dim); border: 1px solid var(--line); }
+  .w-100 { width: 100%; } .w-88 { width: 88%; } .w-70 { width: 70%; } .w-55 { width: 55%; } .w-40 { width: 40%; }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+    background: var(--surface-dim);
+    border: 1px solid var(--line);
+    padding: 0.22rem 0.55rem;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+  .chip.up::before { content: "▲"; color: var(--accent); font-size: 0.6rem; }
+  .chip-row { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+  .stat-num { font-size: 2.05rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .stat-unit { font-size: 1rem; color: var(--ink-soft); font-weight: 500; }
+  .gauge {
+    height: 8px; border-radius: 100px; background: var(--surface-dim);
+    border: 1px solid var(--line); overflow: hidden; margin-top: 0.3rem;
+  }
+  .gauge > span { display: block; height: 100%; background: var(--accent); }
+
+  .imgbox {
+    height: 118px;
+    border: 1.4px dashed var(--line-strong);
+    border-radius: 8px;
+    background:
+      linear-gradient(to top right, transparent 47%, var(--line-strong) 48%, var(--line-strong) 52%, transparent 53%),
+      linear-gradient(to top left, transparent 47%, var(--line-strong) 48%, var(--line-strong) 52%, transparent 53%);
+  }
+
+  .segmented {
+    display: flex; gap: 0.3rem; font-size: 0.7rem; color: var(--ink-faint);
+  }
+  .segmented span {
+    padding: 0.2rem 0.5rem; border: 1px solid var(--line); border-radius: 6px;
+  }
+  .segmented span.sel { color: var(--ink); border-color: var(--line-strong); font-weight: 600; }
+
+  .list-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.4rem 0; font-size: 0.8rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .list-row:last-child { border-bottom: none; }
+  .list-row .rank { color: var(--ink-faint); font-family: ui-monospace, monospace; font-size: 0.72rem; width: 1.1rem; }
+  .list-row .nm { flex: 1; font-weight: 600; }
+  .list-row .sc { font-family: ui-monospace, monospace; font-variant-numeric: tabular-nums; color: var(--ink-soft); }
+  .lock-row { opacity: 0.5; }
+  .lock-row .nm, .lock-row .sc { filter: blur(2.5px); }
+  .pro-badge {
+    font-size: 0.62rem; font-family: ui-monospace, monospace; color: var(--lock);
+    border: 1px solid var(--line); border-radius: 4px; padding: 0.05rem 0.3rem;
+  }
+
+  .btn {
+    display: block; text-align: center;
+    font-size: 0.82rem; font-weight: 600;
+    padding: 0.6rem; border-radius: 8px;
+    background: var(--accent); color: white;
+    border: 1px solid var(--accent);
+  }
+  .btn-ghost {
+    background: transparent; color: var(--ink-soft);
+    border: 1px solid var(--line);
+  }
+
+  .radio-opt {
+    display: flex; align-items: center; gap: 0.5rem;
+    font-size: 0.82rem; padding: 0.5rem 0.65rem;
+    border: 1px solid var(--line); border-radius: 8px;
+  }
+  .radio-opt .dot { width: 0.85rem; height: 0.85rem; border-radius: 50%; border: 1.4px solid var(--line-strong); flex: none; }
+  .progress-dots { display: flex; gap: 0.3rem; }
+  .progress-dots span { width: 1.4rem; height: 4px; border-radius: 3px; background: var(--surface-dim); border: 1px solid var(--line); }
+  .progress-dots span.on { background: var(--accent); border-color: var(--accent); }
+
+  .feed-item { display: flex; gap: 0.6rem; font-size: 0.78rem; padding: 0.4rem 0; }
+  .feed-item .ts { font-family: ui-monospace, monospace; color: var(--ink-faint); font-size: 0.7rem; flex: none; padding-top: 0.1rem; }
+  .toggle { width: 2rem; height: 1.1rem; border-radius: 100px; border: 1px solid var(--line-strong); position: relative; flex: none; }
+  .toggle::after { content:""; position:absolute; top:1px; right:1px; width: 0.9rem; height: 0.9rem; border-radius:50%; background: var(--accent); }
+  .toggle.off::after { right: auto; left: 1px; background: var(--ink-faint); }
+  .settings-row { display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; padding: 0.45rem 0; border-bottom: 1px solid var(--line); }
+  .settings-row:last-child { border-bottom: none; }
+
+  .journal-card { border: 1px solid var(--line); border-radius: 10px; padding: 0.7rem 0.75rem; }
+  .journal-meta { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--ink-faint); margin-bottom: 0.35rem; }
+  .journal-body { font-size: 0.78rem; color: var(--ink-soft); }
+  .auto-tag { display:inline-block; font-family: ui-monospace, monospace; font-size: 0.65rem; color: var(--accent); background: var(--accent-soft); padding: 0.12rem 0.4rem; border-radius: 4px; margin-top: 0.35rem; }
+
+  table.pricing { width: 100%; border-collapse: collapse; font-size: 0.76rem; }
+  table.pricing th, table.pricing td { padding: 0.4rem 0.3rem; border-bottom: 1px solid var(--line); text-align: center; }
+  table.pricing th:first-child, table.pricing td:first-child { text-align: left; color: var(--ink-soft); }
+  table.pricing th { font-weight: 700; }
+  table.pricing td.yes { color: var(--accent); font-weight: 700; }
+  table.pricing td.no { color: var(--ink-faint); }
+  .price-block { text-align: center; padding: 0.9rem 0; }
+  .price-big { font-size: 1.7rem; font-weight: 700; }
+  .price-sub { font-size: 0.76rem; color: var(--ink-soft); margin-top: 0.15rem; }
+  .fineprint { font-size: 0.66rem; color: var(--ink-faint); text-align: center; }
+
+  .tabbar {
+    display: flex; justify-content: space-between;
+    padding-top: 0.6rem; margin-top: auto;
+    border-top: 1px solid var(--line);
+  }
+  .tabitem { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; }
+  .tabitem .icn { margin: 0; }
+  .tabitem span { font-size: 0.62rem; color: var(--ink-faint); }
+  .tabitem.sel span { color: var(--accent); font-weight: 600; }
+  .tabitem.sel .icn { border-color: var(--accent); }
+
+  .quiz-opt { display: flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; padding: 0.45rem 0.6rem; border: 1px solid var(--line); border-radius: 8px; }
+  .quiz-opt .dot { width: 0.8rem; height: 0.8rem; border: 1.4px solid var(--line-strong); border-radius: 4px; flex: none; }
+
+  @media (max-width: 520px) {
+    .legend { gap: 0.6rem 1rem; }
+  }
+</style>
+
+<div class="wrap">
+
+  <span class="eyebrow">wireframe · v1 · lo-fi</span>
+  <h1>초보자 구독형 스크리닝 앱<br>핵심 화면 와이어프레임</h1>
+  <p class="intro">
+    <b>docs/product-plan-v1.md</b>의 §3(정보 제품 설계)와 §8(초보자 구독 ₩9,900/월) 기준으로
+    사용자 여정 순서대로 7개 화면을 저해상도로 정리했습니다.
+    카피는 §4·§8-3에서 정한 문구 원칙(조언성 표현 금지, 사실 서술)을 그대로 따랐고,
+    특히 위험한 지점은 화면 안에 <b>주의 태그</b>로 표시했습니다.
+  </p>
+
+  <div class="legend">
+    <div class="legend-item"><span class="legend-swatch sw-img"></span> 차트·이미지 자리표시</div>
+    <div class="legend-item"><span class="legend-swatch sw-ref mono">§</span> 기획서 섹션 참조</div>
+    <div class="legend-item"><span class="legend-swatch sw-flag">⚠</span> 문구 주의 구간 (조언성 표현 금지)</div>
+    <div class="legend-item"><span class="legend-swatch sw-lock">🔒</span> Free 잠금 · Pro 전용</div>
+  </div>
+
+  <div class="board">
+
+    <div class="stage"><span class="stage-idx mono">1부</span><h2>온보딩</h2><span class="note">가입 직후, 1회</span></div>
+
+    <!-- ① 온보딩 진단 -->
+    <div class="scene">
+      <div class="scene-head">
+        <div class="scene-num">1</div>
+        <div class="scene-title"><h3>온보딩 진단</h3><p>레벨 체크 5문항 → 학습 경로 추천</p></div>
+        <span class="ref">§8-3 A</span>
+      </div>
+      <div class="frame"><div class="notch"></div>
+        <div class="screen">
+          <div class="topbar"><span class="tt">몇 가지만 여쭤볼게요</span><span class="mono">3 / 5</span></div>
+          <div class="progress-dots"><span class="on"></span><span class="on"></span><span class="on"></span><span></span><span></span></div>
+          <div style="font-size:0.92rem; font-weight:700; margin-top:0.3rem;">이동평균선이 뭔지 아세요?</div>
+          <div class="quiz-opt"><span class="dot"></span> 잘 알아요</div>
+          <div class="quiz-opt"><span class="dot"></span> 들어는 봤어요</div>
+          <div class="quiz-opt"><span class="dot"></span> 처음 들어요</div>
+          <div style="flex:1"></div>
+          <a class="btn" href="#" onclick="return false">다음</a>
+          <a class="btn btn-ghost" href="#" onclick="return false" style="font-size:0.72rem; padding:0.4rem;">건너뛰기</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage"><span class="stage-idx mono">2부</span><h2>데일리 홈 &amp; 종목 상세</h2><span class="note">매일 확인하는 화면</span></div>
+
+    <!-- ② 홈 대시보드 -->
+    <div class="scene">
+      <div class="scene-head">
+        <div class="scene-num">2</div>
+        <div class="scene-title"><h3>홈 대시보드</h3><p>시장 온도 · 오늘의 브리핑 · 스코어보드</p></div>
+        <span class="ref">§3-1 / §8-3 C</span>
+      </div>
+      <div class="frame"><div class="notch"></div>
+        <div class="screen">
+          <div class="topbar"><span class="tt">오늘의 시장</span><span class="icn round"></span></div>
+
+          <div class="card">
+            <div style="display:flex; align-items:baseline; gap:0.4rem;">
+              <span class="stat-num">38<span class="stat-unit">도</span></span>
+              <span class="chip">보통</span>
+            </div>
+            <div class="gauge"><span style="width:38%"></span></div>
+          </div>
+
+          <div class="card">
+            <div class="line w-100"></div>
+            <div class="line w-88" style="margin-top:0.35rem;"></div>
+            <div class="line w-55" style="margin-top:0.35rem;"></div>
+            <div style="font-size:0.7rem; color:var(--ink-faint); margin-top:0.4rem;">
+              "오늘은 지표 2개가 초고온 구간이에요. 반도체 업종에 거래대금이 유독 몰렸습니다."
+            </div>
+          </div>
+
+          <div class="card">
+            <div style="font-size:0.72rem; color:var(--ink-faint); margin-bottom:0.3rem;">스코어 TOP 5</div>
+            <div class="list-row"><span class="rank">1</span><span class="nm">삼성전자</span><span class="sc">82점</span></div>
+            <div class="list-row"><span class="rank">2</span><span class="nm">SK하이닉스</span><span class="sc">78점</span></div>
+            <div class="list-row lock-row"><span class="rank">6</span><span class="nm">○○○○</span><span class="sc pro-badge">🔒 Pro</span></div>
+          </div>
+
+          <div class="card">
+            <div style="font-size:0.72rem; color:var(--ink-faint); margin-bottom:0.3rem;">나의 관심종목</div>
+            <div class="chip-row"><span class="chip up">OO전자 · 20일선 상향돌파</span></div>
+          </div>
+
+          <div class="tabbar">
+            <div class="tabitem sel"><span class="icn"></span><span>홈</span></div>
+            <div class="tabitem"><span class="icn"></span><span>학습</span></div>
+            <div class="tabitem"><span class="icn"></span><span>관심종목</span></div>
+            <div class="tabitem"><span class="icn"></span><span>마이</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ③ 종목 상세 -->
+    <div class="scene">
+      <div class="scene-head">
+        <div class="scene-num">3</div>
+        <div class="scene-title"><h3>종목 상세</h3><p>차트 · 지표 배지 · AI 지표 해설</p></div>
+        <span class="ref">§3-2</span>
+      </div>
+      <div class="frame"><div class="notch"></div>
+        <div class="screen">
+          <div class="topbar"><span class="icn"></span><span class="tt">OO전자 · 005930</span><span class="icn round"></span></div>
+
+          <div>
+            <span class="stat-num" style="font-size:1.4rem;">73,000<span class="stat-unit">원</span></span>
+            <span class="chip up" style="margin-left:0.4rem;">+1.2%</span>
+          </div>
+
+          <div class="segmented">
+            <span>1개월</span><span class="sel">3개월</span><span>6개월</span><span>1년</span>
+          </div>
+          <div class="imgbox"></div>
+
+          <div class="chip-row">
+            <span class="chip">20일선 상향돌파</span>
+            <span class="chip">거래량 180%</span>
+            <span class="chip">외국인 5일 순매수</span>
+          </div>
+
+          <div class="card flagged">
+            <span class="flag-tag">⚠ §4 문구 주의</span>
+            <div class="line w-100"></div>
+            <div class="line w-70" style="margin-top:0.35rem;"></div>
+            <div style="font-size:0.7rem; color:var(--ink-faint); margin-top:0.4rem;">
+              "20일 이동평균선이 5일선을 상향 돌파했어요. 거래량은 최근 20일 평균보다 1.8배 많았습니다."
+            </div>
+          </div>
+          <div style="font-size:0.68rem; color:var(--ink-faint);">투자의견 · 매수가 · 목표가 표기 없음 — 지표 사실만 서술</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ⑤ 관심종목 · 알림 -->
+    <div class="scene">
+      <div class="scene-head">
+        <div class="scene-num">4</div>
+        <div class="scene-title"><h3>관심종목 · 알림</h3><p>지표 변화를 사실 그대로 통지</p></div>
+        <span class="ref">§8-3 D</span>
+      </div>
+      <div class="frame"><div class="notch"></div>
+        <div class="screen">
+          <div class="topbar"><span class="tt">관심종목 알림</span><span class="icn"></span></div>
+
+          <div class="card">
+            <div class="chip-row">
+              <span class="chip">OO전자</span>
+              <span class="chip" style="opacity:0.45;">+ 종목 추가 🔒 Pro</span>
+            </div>
+          </div>
+
+          <div class="card flagged">
+            <span class="flag-tag">⚠ 행동 지시 금지 · 사실 서술만</span>
+            <div class="feed-item"><span class="ts mono">09:12</span><span>OO전자 거래량이 평소보다 2배 늘었어요</span></div>
+            <div class="feed-item"><span class="ts mono">08:40</span><span>△△바이오 20일선을 5일선이 하향 이탈했어요</span></div>
+            <div class="feed-item"><span class="ts mono">어제</span><span>OO전자 외국인 5거래일 연속 순매수 기록</span></div>
+          </div>
+
+          <div class="card">
+            <div style="font-size:0.72rem; color:var(--ink-faint); margin-bottom:0.2rem;">알림 종류</div>
+            <div class="settings-row"><span>이평선 교차</span><span class="toggle"></span></div>
+            <div class="settings-row"><span>거래량 급증</span><span class="toggle"></span></div>
+            <div class="settings-row"><span>수급 변화</span><span class="toggle off"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage"><span class="stage-idx mono">3부</span><h2>학습 센터</h2><span class="note">구독 리텐션의 핵심 축</span></div>
+
+    <!-- ④ 학습 센터 -->
+    <div class="scene">
+      <div class="scene-head">
+        <div class="scene-num">5</div>
+        <div class="scene-title"><h3>학습 센터</h3><p>용어사전 · 데일리 카드 · 퀴즈</p></div>
+        <span class="ref">§8-3 B</span>
+      </div>
+      <div class="frame"><div class="notch"></div>
+        <div class="screen">
+          <div class="topbar"><span class="tt">학습</span><span class="icn"></span></div>
+
+          <div class="card">
+            <div style="font-size:0.7rem; color:var(--accent); font-family:ui-monospace,monospace;">오늘 배울 지표</div>
+            <div style="font-weight:700; margin-top:0.15rem;">RSI (상대강도지수)</div>
+            <div class="line w-100" style="margin-top:0.5rem;"></div>
+            <div class="line w-70" style="margin-top:0.35rem;"></div>
+          </div>
+
+          <div class="line w-40" style="height:1.6rem; border-radius:8px;"></div>
+
+          <div class="card">
+            <div class="list-row"><span class="nm">이동평균선</span><span class="sc">›</span></div>
+            <div class="list-row"><span class="nm">RSI</span><span class="sc">›</span></div>
+            <div class="list-row"><span class="nm">PER</span><span class="sc">›</span></div>
+            <div class="list-row"><span class="nm">외국인 수급</span><span class="sc">›</span></div>
+          </div>
+
+          <div class="card">
+            <div style="font-size:0.78rem; font-weight:600;">Q. RSI가 70을 넘으면?</div>
+            <div class="quiz-opt" style="margin-top:0.4rem;"><span class="dot"></span> 거래가 뜸하다는 뜻</div>
+            <div class="quiz-opt"><span class="dot"></span> 최근 상승 강도가 세다는 뜻</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage"><span class="stage-idx mono">4부</span><h2>기록</h2><span class="note">자기 복기 도구</span></div>
+
+    <!-- ⑥ 매매 저널 -->
+    <div class="scene">
+      <div class="scene-head">
+        <div class="scene-num">6</div>
+        <div class="scene-title"><h3>매매 저널</h3><p>유저가 스스로 기록 · 지표 자동 첨부</p></div>
+        <span class="ref">§8-3 E</span>
+      </div>
+      <div class="frame"><div class="notch"></div>
+        <div class="screen">
+          <div class="topbar"><span class="tt">나의 기록</span><span class="icn"></span></div>
+
+          <a class="btn" href="#" onclick="return false">+ 오늘의 기록 추가</a>
+
+          <div class="journal-card">
+            <div class="journal-meta"><span>2026.08.10</span><span>OO전자 · 매수</span></div>
+            <div class="journal-body">"실적 발표 앞두고 반도체 업황 기대감에 매수함"</div>
+            <span class="auto-tag">그날 스코어 74점 · RSI 68</span>
+          </div>
+          <div class="journal-card">
+            <div class="journal-meta"><span>2026.08.03</span><span>△△바이오 · 매도</span></div>
+            <div class="journal-body">"단기 급등 후 불안해서 정리"</div>
+            <span class="auto-tag">그날 스코어 51점 · RSI 44</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage"><span class="stage-idx mono">5부</span><h2>결제 전환</h2><span class="note">Free → Pro</span></div>
+
+    <!-- ⑦ 요금제 -->
+    <div class="scene">
+      <div class="scene-head">
+        <div class="scene-num">7</div>
+        <div class="scene-title"><h3>요금제 (Paywall)</h3><p>7일 무료체험 → ₩9,900/월</p></div>
+        <span class="ref">§8-4 / §8-6</span>
+      </div>
+      <div class="frame"><div class="notch"></div>
+        <div class="screen">
+          <div class="topbar"><span class="icn"></span><span class="tt">Pro로 시작하기</span></div>
+
+          <table class="pricing">
+            <tr><th></th><th>Free</th><th>Pro</th></tr>
+            <tr><td>스코어보드</td><td>TOP 5</td><td class="yes">TOP 20</td></tr>
+            <tr><td>관심종목</td><td>1개</td><td class="yes">무제한</td></tr>
+            <tr><td>지표 변화 알림</td><td class="no">–</td><td class="yes">✓</td></tr>
+            <tr><td>학습 커리큘럼</td><td>일부</td><td class="yes">전체</td></tr>
+            <tr><td>매매 저널</td><td class="no">–</td><td class="yes">✓</td></tr>
+            <tr><td>광고</td><td>있음</td><td class="yes">없음</td></tr>
+          </table>
+
+          <div class="price-block">
+            <div class="price-big">월 9,900원</div>
+            <div class="price-sub">커피 3잔 값으로, 매일의 확인 습관</div>
+          </div>
+
+          <a class="btn" href="#" onclick="return false">7일 무료체험 시작</a>
+          <div class="fineprint">체험 종료 전 알려드려요 · 언제든 해지 가능</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
