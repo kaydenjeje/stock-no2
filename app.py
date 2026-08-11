@@ -13,16 +13,16 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-    /* Streamlit Community Cloud는 상단에 고정 툴바(Share/GitHub 등)를 얹기 때문에
-       로컬 실행 때보다 더 큰 여백이 필요하다. 그 툴바 높이보다 넉넉하게 잡아둔다. */
-    .block-container { padding-top: 4.5rem !important; padding-bottom: 3rem !important; }
-    @media (max-width: 640px) {
-        .block-container { padding-top: 5.5rem !important; }
-    }
+    .block-container { padding-bottom: 3rem !important; }
 </style>
 """,
     unsafe_allow_html=True,
 )
+
+# Streamlit Community Cloud는 상단에 고정 툴바(Share/GitHub 등)를 얹는데, 그 툴바가
+# 콘텐츠 위에 겹쳐 그려진다. CSS padding-top만으로는 배포 환경마다 툴바 높이가 달라
+# 안정적으로 피하기 어려워서, 실제 공간을 차지하는 여백 요소를 직접 그려 넣는다.
+st.markdown('<div style="height:4.5rem;"></div>', unsafe_allow_html=True)
 
 if "app_state" not in st.session_state:
     st.session_state.app_state = storage.load_state()
