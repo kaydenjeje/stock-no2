@@ -13,7 +13,12 @@ st.set_page_config(
 st.markdown(
     """
 <style>
-    .block-container { padding-top: 1.4rem !important; padding-bottom: 3rem !important; }
+    /* Streamlit Community Cloud는 상단에 고정 툴바(Share/GitHub 등)를 얹기 때문에
+       로컬 실행 때보다 더 큰 여백이 필요하다. 그 툴바 높이보다 넉넉하게 잡아둔다. */
+    .block-container { padding-top: 4.5rem !important; padding-bottom: 3rem !important; }
+    @media (max-width: 640px) {
+        .block-container { padding-top: 5.5rem !important; }
+    }
 </style>
 """,
     unsafe_allow_html=True,
